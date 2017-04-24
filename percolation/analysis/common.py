@@ -36,6 +36,13 @@ def cdf_std(F, x):
     return np.sqrt(cdf_var(F, x))
 
 
+def cdf_median(Finf, Fsup, x):
+    median_inf = x[np.where(Fsup <= 0.5)[0][-1]]
+    median_sup = x[np.where(Finf >= 0.5)[0][0]]
+    median_med = median_inf + (median_sup - median_inf)/2
+    return median_med, median_inf, median_sup
+
+
 # % Binomial Distribution Aux % #
 def binomial_var(p, n):
     return n*p*(1-p)
@@ -70,4 +77,21 @@ def binomial_ci_wilson(p, n, ci=None):
 # % Utility function to apply above funtions to lists of different sizes of arrays % #
 def listmap(func, v, args=None):
     return np.array([func(v[idx], **args) if args else func(v[idx]) for idx in range(len(v))])
+
+
+def listop(func, v, w, args=None):
+    return np.array([func(v[idx], w[idx], **args) if args else func(v[idx], w[idx]) for idx in range(len(v))])
+
+
+def varlistop(func, v, args=None):
+    ret = []
+    for idx in range(len(v[0])):
+        vargs = []
+        for idx_arg in range(len(v)):
+            vargs.append(v[idx_arg][idx])
+        if args:
+            ret.append(func(*vargs, **args))
+        else:
+            ret.append(func(*vargs))
+    return np.array(ret)
 
