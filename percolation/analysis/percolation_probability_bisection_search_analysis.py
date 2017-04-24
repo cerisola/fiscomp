@@ -1,11 +1,20 @@
 import importlib
 import numpy as np
 from scipy import stats
+from scipy.stats import linregress
 import matplotlib.pyplot as plt
 import load_data
 import common
 importlib.reload(load_data)
 importlib.reload(common)
+
+
+def fit_std(mean, std):
+    idx_sort = np.argsort(std)
+    idx_min = 0
+    idx_max = 20
+    slope, intercept, _, _, std_err = linregress(std[idx_sort][idx_min:idx_max], mean[idx_sort][idx_min:idx_max])
+    return slope, intercept, std_err
 
 
 def plot_percolation_probability_statistics(mean, std, sem, L, ci='', ci_style='none'):
@@ -51,11 +60,28 @@ def plot_bisection_search_histogram(p_percolation, L, ntrials):
 
 
 def plot_bisection_search_histogram_list(p_percolation, L, ntrials, cumulative=True):
+    nvalues = [(np.unique(p_percolation[idx])).size for idx in range(len(L))]
+    std = common.listmap(common.std, p_percolation)
     plt.figure()
     plt.title('Bisection search results histogram')
     for idx in range(L.size):
-        plt.hist(p_percolation[idx], bins=20, cumulative=False,
-                 histtype='bar', linewidth=1.2, alpha=0.8, label='L = {}'.format(L[idx]))
+        plt.hist(p_percolation[idx], bins=nvalues[idx]//50, normed=True, cumulative=False,
+                 histtype='step', linewidth=1.2, alpha=0.8, label='L = {}'.format(L[idx]))
+    plt.legend()
+    plt.show()
+
+    plt.figure()
+    plt.title('Bisection search results histogram')
+    for idx in range(L.size):
+        hist, bins = np.histogram(p_percolation[idx], bins=(int)(nvalues[idx]/std[idx]/2000), density=True)
+        #widths = width = np.diff(bins)
+        #centers = (bins[:-1] + bins[1:]) / 2
+        #plt.step(centers, hist, '-', label='L = {}'.format(L[idx]))
+        bins = [0] + list(bins) + [1]
+        plt.hist(p_percolation[idx], bins=bins, normed=True, cumulative=False,
+                histtype='step', linewidth=1.2, alpha=0.8, label='L = {}'.format(L[idx]))
+    plt.xlim((0.4, 0.75))
+    plt.grid()
     plt.legend()
     plt.show()
 
@@ -63,10 +89,40 @@ def plot_bisection_search_histogram_list(p_percolation, L, ntrials, cumulative=T
         plt.figure()
         plt.title('Bisection search results cumulative function histogram')
         for idx in range(L.size):
-            plt.hist(p_percolation[idx], bins=20, cumulative=True,
-                     histtype='bar', linewidth=1.2, alpha=0.8, label='L = {}'.format(L[idx]))
+            plt.hist(p_percolation[idx], bins=nvalues[idx], normed=True, cumulative=True,
+                     histtype='step', linewidth=1.1, label='L = {}'.format(L[idx]),
+                     zorder=3)
         plt.legend()
         plt.show()
+
+        plt.figure()
+        plt.title('Bisection search results histogram')
+        for idx in range(L.size):
+            hist, bins = np.histogram(p_percolation[idx], bins=nvalues[idx], density=True)
+            #widths = width = np.diff(bins)
+            #centers = (bins[:-1] + bins[1:]) / 2
+            #plt.step(centers, hist.cumsum()/hist.sum(), '-', label='L = {}'.format(L[idx]))
+            bins = [0] + list(bins) + [1]
+            plt.hist(p_percolation[idx], bins=bins, normed=True, cumulative=True,
+                histtype='step', linewidth=1.1, label='L = {}'.format(L[idx]),
+                zorder=3)
+        plt.xlim((0.4, 0.8))
+        plt.grid()
+        plt.legend()
+        plt.show()
+
+
+def plot_std_fit(mean, std, slope, intercept):
+    idx_sort = np.argsort(std)
+    plt.figure()
+    plt.title('$\sigma$ fit; intercept = {}'.format(intercept))
+    plt.plot(std[idx_sort], mean[idx_sort], 'o', markersize=4.0, label='observations')
+    plt.plot(std[idx_sort], slope*std[idx_sort] + intercept, '--', markersize=4.0, label='fit')
+    plt.grid()
+    plt.xlabel('$\sigma$')
+    plt.ylabel('$p_{\mathrm{avg}}$')
+    plt.legend()
+    plt.show()
 
 
 save_figures = False
@@ -84,10 +140,13 @@ var = common.listmap(common.var, p_percolation)
 std = np.sqrt(var)
 sem = common.listmap(common.sem, p_percolation, args={'ci': ci})
 
+std_fit_slope, std_fit_intercept, _ = fit_std(mean, std)
+
 plot_percolation_probability_statistics(mean, std, sem, L, ci=ci, ci_style='area')
 plot_bisection_search_results(p_percolation[4], L[4], ntrials[4])
+plot_std_fit(mean, std, std_fit_slope, std_fit_intercept)
 
-idx_hist = [9, 22, 30]
+idx_hist = [9, 22, 30, -1]
 plot_bisection_search_histogram_list([p_percolation[idx] for idx in idx_hist], L[idx_hist], ntrials[idx_hist])
 
 if not save_figures:
