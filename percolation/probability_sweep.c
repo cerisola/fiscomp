@@ -20,6 +20,8 @@ double Z_normal(const char * ci);
 
 /* calculate the amount of experiments needed to reach the desired error */
 unsigned int samples_for_target_ci(double p, double error, double Z);
+double maximum_error_binomial_wald(double p, int nsamples, double Z);
+double maximum_error_binomial_wilson(double p, int nsamples, double Z);
 
 /* main body function */
 int main(int argc, char ** argv)
@@ -53,7 +55,7 @@ int main(int argc, char ** argv)
     time_t start_time;
     time_t current_time;
     double probability_estimation;
-    int nrepetitions_estimation;
+    double error_estimation;
     int n;
     int i;
     int j;
@@ -138,8 +140,8 @@ int main(int argc, char ** argv)
 
             if (n == nrepetitions - 1) {
                 probability_estimation = ((double)percolation_counts[i])/nrepetitions;
-                nrepetitions_estimation = samples_for_target_ci(probability_estimation, target_error, Z);
-                nrepetitions = nrepetitions_estimation > nrepetitions ? nrepetitions_estimation : nrepetitions;
+                error_estimation = maximum_error_binomial_wilson(probability_estimation, nrepetitions, Z);
+                nrepetitions = error_estimation < target_error ? nrepetitions : nrepetitions + 1000;
                 time_check_interval = nrepetitions / 100;
                 /*printf("adjusting repetitions to %d for i = %d with p = %3f using Z = %f\n",
                        nrepetitions, i, probability_estimation, Z);*/
@@ -213,3 +215,28 @@ unsigned int samples_for_target_ci(double p, double error, double Z)
 {
     return (Z*Z)*p*(1-p)/(error*error);
 }
+
+double maximum_error_binomial_wald(double p, int nsamples, double Z)
+{
+    return Z*sqrt(p*(1-p)/nsamples);
+}
+
+double maximum_error_binomial_wilson(double p, int nsamples, double Z)
+{
+    double err, wm, wp, denom, coef1, coef2, coef3;
+
+    denom = 2.0*(nsamples + Z*Z);
+    coef1 = 2.0*nsamples*p + Z*Z;
+    coef2 = Z*Z - 1.0/((double)nsamples) + 4.0*nsamples*p*(1.0 - p);
+    coef3 = 4.0*p - 2.0;
+
+    wm = (coef1 - Z*sqrt(coef2 + coef3) - 1.0)/denom;
+    wm = wm > 0 ? wm : 0;
+
+    wp = (coef1 + Z*sqrt(coef2 - coef3) + 1.0)/denom;
+    wp = wp < 1 ? wp : 1;
+
+    err = (wp - wm)/2.0;
+    return err;
+}
+
