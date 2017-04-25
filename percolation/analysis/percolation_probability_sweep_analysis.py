@@ -1,7 +1,6 @@
 import importlib
 import numpy as np
-from scipy.integrate import simps
-from scipy.stats import linregress
+import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import load_data
 import common
@@ -13,8 +12,11 @@ def fit_std(mean, std):
     idx_sort = np.argsort(std)
     idx_min = 0
     idx_max = 20
-    slope, intercept, _, _, std_err = linregress(std[idx_sort][idx_min:idx_max], mean[idx_sort][idx_min:idx_max])
-    return slope, intercept, std_err
+    fit_model = sm.OLS(mean[idx_sort][idx_min:idx_max], sm.add_constant(std[idx_sort][idx_min:idx_max]))
+    fit_result = fit_model.fit()
+    intercept = fit_result.params[0]
+    slope = fit_result.params[1]
+    return slope, intercept, fit_result
 
 
 def plot_percolation_probability(p_occupation, p_percolation, p_percolation_inf, p_percolation_sup, L, ci=''):
