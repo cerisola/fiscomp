@@ -1,23 +1,20 @@
 import numpy as np
 
 # % Single value % #
-def cluster_densities(count, L):
-    return count/(L*L)
+def cluster_densities(count, realizations, L):
+    return count/realizations/(L*L)
 
 
-def percolating_cluster_mass(size, percolated):
-    idx_percolated = np.where(percolated > 0)[0]
-    if idx_percolated.size == 0:
-        return 0
-    return np.average(size[idx_percolated], weights=percolated[idx_percolated])
+def percolating_cluster_mass(size, percolated, realizations):
+    return np.sum(size*percolated)/realizations
 
 
-def percolating_cluster_density(size, percolated, L):
-    return percolating_cluster_mass(size, percolated)/(L*L)
+def percolating_cluster_density(size, percolated, realizations, L):
+    return percolating_cluster_mass(size, percolated, realizations)/(L*L)
 
 
-def percolating_cluster_strength(size, percolated, L):
-    return percolating_cluster_mass(size, percolated)/(L*L)
+def percolating_cluster_strength(size, percolated, realizations, L):
+    return percolating_cluster_mass(size, percolated, realizations)/(L*L)
 
 
 # % Multiple values (list) % #

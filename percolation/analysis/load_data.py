@@ -43,7 +43,7 @@ def load_cluster_statistics_file(file_name):
                 count.append(int(columns[1]))
                 percolated.append(int(columns[2]))
     size = np.asarray(size)
-    count = np.asarray(count) / nrealizations
+    count = np.asarray(count)
     percolated = np.asarray(percolated)
     idx = np.argsort(size)
     return size[idx], count[idx], percolated[idx], L, p_occupation, nrealizations
