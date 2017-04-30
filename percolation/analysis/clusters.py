@@ -1,8 +1,8 @@
 import numpy as np
 
 # % Single value % #
-def cluster_densities(count, realizations, L):
-    return count/realizations/(L*L)
+def cluster_densities_finite(count, percolated, realizations, L):
+    return (count - percolated)/realizations/(L*L)
 
 
 def percolating_cluster_mass(size, percolated, realizations):
@@ -18,8 +18,8 @@ def percolating_cluster_strength(size, percolated, realizations, L):
 
 
 # % Multiple values (list) % #
-def cluster_densities_list(count, L):
-    data = [cluster_densities(count[i], L[i]) for i in range(L.size)]
+def cluster_densities_finite_list(count, percolated, realizations, L):
+    data = [cluster_densities(count[i], percolated[i], realizations[i], L[i]) for i in range(L.size)]
     return data
 
 
