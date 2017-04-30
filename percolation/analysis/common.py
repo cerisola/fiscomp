@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.stats as stats
 import scipy.integrate as integrate
+import statsmodels.api as sm
 
 
 Z_normal = { None: 1, '90': 1.644854, '95': 1.959964, '99': 2.575829, '99.9': 3.290527, '99.99': 3.890592 }
@@ -95,3 +96,31 @@ def varlistop(func, v, args=None):
             ret.append(func(*vargs))
     return np.array(ret)
 
+
+# % Utility fit functions % #
+def chi2reduced(fit_result, x, y, add_constant=True, log_scale=False):
+    dof = len(x) - len(fit_result.params)
+    if log_scale:
+        X = np.log(x)
+        Y = np.log(y)
+    else:
+        X = x
+        Y = y
+    if add_constant:
+        X = sm.add_constant(X)
+    residuals = (Y - fit_result.predict(X))**2
+    mse = np.sum(residuals)/dof
+    return mse
+
+
+def fiteval(fit_result, x, add_constant=True, log_scale=False, exp_result=False):
+    if log_scale:
+        X = np.log(x)
+    else:
+        X = x
+    if add_constant:
+        X = sm.add_constant(X)
+    y = fit_result.predict(X)
+    if exp_result:
+        y = np.exp(y)
+    return y
