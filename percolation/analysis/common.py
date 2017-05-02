@@ -25,6 +25,26 @@ def sem(v, ci=None):
     return Z*stats.sem(v)
 
 
+def median(v):
+    return np.median(v)
+
+
+def err_chebyshev(v, ci):
+    N = v.size
+    P = 1 - float(ci)/100
+    sigma2 = var(v)
+    epsilon2 = sigma2/(N*P)
+    return np.sqrt(epsilon2)
+
+
+def err_median(v, ci):
+    #Z = { '90': 1.22, '95': 1.36, '99': 1.69 }
+    N = v.size
+    P = 1 - float(ci)/100
+    epsilon2 = np.abs(np.log(1/P/2)/(4*N))
+    return np.sqrt(epsilon2)
+
+
 def cdf_mean(F, x):
     return (1 - integrate.simps(y=F, x=x))
 
